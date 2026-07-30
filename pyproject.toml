@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "robomem"
+version = "0.1.0"
+description = "robomem — the robot-memory layer for Eximius Labs. Ingest a recorded multimodal session, index it on the unified embedding space, and answer natural-language recall queries over it."
+authors = [{ name = "Abdul Basit Tonmoy" }]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "lancedb>=0.6",
+    "pyarrow>=14",
+    "numpy>=1.24",
+    "torch>=2.1",
+    "pillow>=10",
+]
+
+[project.optional-dependencies]
+# The real embedder. Optional on purpose: the whole ingest -> index -> recall path
+# runs GPU-free against an injected fake, so tests and CI never pull this.
+model = ["fusion-embedding-2"]
+# Video frame decoding for the real embed_video path.
+video = ["av>=12"]
+# Robot-log ingestion (later phase). Declared now so the extra names are stable.
+ros = ["mcap>=1.1", "rosbags>=0.9", "pyulog>=1.0"]
+
+[dependency-groups]
+dev = ["pytest>=7"]
+
+[project.scripts]
+robomem = "robomem.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["robomem*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
