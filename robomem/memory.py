@@ -22,8 +22,11 @@ from typing import Optional, Sequence, Union
 
 import numpy as np
 
+from . import temporal
 from .embedder import Embedder, l2_normalize, to_numpy
+from .episodes import DEFAULT_EPISODE_THRESHOLD, Episode, assign_episodes
 from .ingest import build_rows
+from .ranking import RankWeights
 from .schema import VECTOR_DIM, Moment
 from .store import LanceStore
 
@@ -34,6 +37,10 @@ class RobotMemory:
         self.embedder = embedder
         self.dim = dim
         self._centroids: Optional[dict] = None  # per-modality mean vectors, cached
+        # Phase-E: change-point threshold + optional temporal-gap break for episode segmentation
+        # (used consistently by index and by the temporal planner).
+        self.episode_threshold: float = DEFAULT_EPISODE_THRESHOLD
+        self.episode_max_gap: Optional[float] = None
 
     # ------------------------------------------------------------------- open
     @classmethod
@@ -43,13 +50,50 @@ class RobotMemory:
         return cls(store, embedder, dim)
 
     # ------------------------------------------------------------------ index
-    def index(self, manifest, dedup_tau: Optional[float] = None):
-        """Ingest a session (manifest path / JSONL / in-memory list) into the table."""
+    def index(self, manifest, dedup_tau: Optional[float] = None, segment: bool = False,
+              seg_threshold: Optional[float] = None, seg_method: str = "drift",
+              seg_max_gap: Optional[float] = None):
+        """Ingest a session (manifest path / JSONL / in-memory list) into the table.
+
+        With ``segment=True`` (Phase E) the kept rows are episode-segmented before they land, so
+        the ``episode_id`` and ``salience`` schema hooks are populated in place -- no second write
+        pass, no LanceDB update. Left off by default so the MVP ingest still writes the hooks as
+        NULL. ``seg_threshold`` overrides :attr:`episode_threshold` for this ingest.
+        """
         rows, stats = build_rows(self.embedder, manifest, dedup_tau=dedup_tau)
+        if segment and rows:
+            thr = float(seg_threshold) if seg_threshold is not None else self.episode_threshold
+            self.episode_threshold = thr
+            if seg_max_gap is not None:
+                self.episode_max_gap = float(seg_max_gap)
+            ep_by_event, sal_by_event, _ = assign_episodes(
+                rows, threshold=thr, method=seg_method, max_gap=self.episode_max_gap)
+            for r in rows:
+                r["episode_id"] = ep_by_event.get(r["event_id"])
+                sal = sal_by_event.get(r["event_id"])
+                r["salience"] = None if sal is None else float(sal)
         self.store.add(rows)
         self._centroids = None  # invalidate: new modality means
         stats.skipped = stats.embedded - stats.kept
         return stats
+
+    # ---------------------------------------------------------------- episodes
+    def episodes(self, modality=None, seg_threshold: Optional[float] = None,
+                 seg_method: str = "drift") -> list[Episode]:
+        """Tier-1 episode records built from the stored rows (deterministic, read-only).
+
+        Segments each ``(modality, source)`` stream by embedding change-point and returns
+        :class:`~robomem.episodes.Episode` records (time-ordered), each with its member ids,
+        centroid, dominant modality, representative label, and peak salience.
+        """
+        where = self._where(modality=modality)
+        rows = self.store.scan(where=where)
+        if not rows:
+            return []
+        thr = float(seg_threshold) if seg_threshold is not None else self.episode_threshold
+        _, _, episodes = assign_episodes(rows, threshold=thr, method=seg_method,
+                                         max_gap=self.episode_max_gap)
+        return episodes
 
     # -------------------------------------------------------------- centroids
     def _modality_centroids(self) -> dict:
@@ -152,6 +196,40 @@ class RobotMemory:
 
     def count(self) -> int:
         return self.store.count()
+
+    # ----------------------------------------------------- temporal reasoning
+    # Deterministic chronological operators (Phase E). Thin wrappers over robomem.temporal,
+    # which is duck-typed on ``self`` so there is no import cycle.
+    def last(self, query: str, modality=None, **kw) -> Optional[Moment]:
+        """Most RECENT episode relevant to ``query``. See :func:`robomem.temporal.last`."""
+        return temporal.last(self, query, modality=modality, **kw)
+
+    # ``count()`` -> table row count (Phase C, unchanged); ``count("query", modality=...)`` ->
+    # number of DISTINCT relevant episodes (Phase E). Dispatched on whether a query is given.
+    def count(self, query=None, modality=None, **kw):  # type: ignore[override]
+        """Table row count with no args; relevant-episode count when given a query string."""
+        if query is None:
+            return self.store.count()
+        return temporal.count(self, query, modality=modality, **kw)
+
+    def before(self, anchor: str, target: Optional[str] = None, modality=None,
+               **kw) -> Optional[Moment]:
+        """Nearest relevant ``modality`` episode BEFORE the anchor. :func:`robomem.temporal.before`."""
+        return temporal.before(self, anchor, target=target, modality=modality, **kw)
+
+    def after(self, anchor: str, target: Optional[str] = None, modality=None,
+              **kw) -> Optional[Moment]:
+        """Nearest relevant ``modality`` episode AFTER the anchor. :func:`robomem.temporal.after`."""
+        return temporal.after(self, anchor, target=target, modality=modality, **kw)
+
+    def timeline(self, query: Optional[str] = None, window=None, modality=None, **kw):
+        """Relevant episodes over a time range, ordered. :func:`robomem.temporal.timeline`."""
+        return temporal.timeline(self, query, window=window, modality=modality, **kw)
+
+    def rerank(self, moments, now: Optional[float] = None,
+               weights: Optional[RankWeights] = None, halflife: float = 10.0):
+        """Re-order Moments by the three-signal score. :func:`robomem.temporal.rerank`."""
+        return temporal.rerank(moments, now, weights or RankWeights.three_signal(), halflife)
 
 
 def _merge_segments(moments: list[Moment], gap: float) -> list[Moment]:
