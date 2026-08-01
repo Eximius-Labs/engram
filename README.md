@@ -1,6 +1,21 @@
+<div align="center">
+
 # Engram
 
-The open cross-modal memory layer for physical AI.
+**The open cross-modal memory layer for physical AI.**
+
+*Index a robot's video, audio, and motion into one embedding space, then search and reason
+about it in plain language, including temporal reasoning that retrieval alone cannot do.*
+
+[![PyPI](https://img.shields.io/pypi/v/engram-robomem.svg)](https://pypi.org/project/engram-robomem/)
+[![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](#)
+[![License](https://img.shields.io/badge/license-Apache--2.0-green.svg)](LICENSE)
+[![Status](https://img.shields.io/badge/status-research%20preview-orange.svg)](#)
+[![Playground](https://img.shields.io/badge/playground-live-8a2be2.svg)](https://www.eximiuslabs.com/playground)
+
+</div>
+
+---
 
 Engram indexes everything a robot sees, hears, and feels into one embedding space on a shared
 clock, and answers questions about it in plain language. It goes past retrieval: it reasons about
@@ -12,8 +27,8 @@ text / image / video / audio / motion space) but stays model-agnostic: it takes 
 through a small injected interface, so the whole ingest, index, and recall path runs with no model,
 no GPU, and no network in tests.
 
-> The Python package is `robomem`. Try a real robot's memory in the live playground on the
-> Eximius Labs site.
+> Try a real robot's memory in the [live playground](https://www.eximiuslabs.com/playground). The
+> package installs as `engram-robomem` and imports as `robomem`.
 
 ## What it does
 
