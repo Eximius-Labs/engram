@@ -1,6 +1,6 @@
 <div align="center">
 
-![Engram, by Eximius Labs](assets/engram-banner-inter.png)
+![Engram, by Eximius Labs](https://raw.githubusercontent.com/Eximius-Labs/engram/main/assets/engram-banner-inter.png)
 
 **The open cross-modal memory layer for physical AI.**
 
