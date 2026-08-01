@@ -153,3 +153,7 @@ uv run python -m pytest
 ```
 
 The suite is GPU-free and uses `FakeEmbedder` with small synthetic sessions.
+
+## License
+
+Apache-2.0. See [LICENSE](LICENSE).
