@@ -69,8 +69,13 @@ mem.index("session.jsonl", segment=True)
 hits = mem.recall("someone handed me a red mug", k=10, after=120.0, before=180.0)
 ```
 
-Install the real embedder with the `model` extra (`pip install robomem[model]`). The base package
-needs only LanceDB, numpy, and Pillow.
+Install with `pip install engram-robomem` (imports as `robomem`). The base package needs only
+LanceDB, numpy, and Pillow. The real embedder (`fusion_embedding`) is not on PyPI yet, so install it
+from source:
+
+```
+pip install "fusion_embedding @ git+https://github.com/Eximius-Labs/fusion-embedding"
+```
 
 ## Design: dependency injection at the embedder seam
 
