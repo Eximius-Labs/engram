@@ -85,11 +85,12 @@ hits = mem.recall("someone handed me a red mug", k=10, after=120.0, before=180.0
 ```
 
 Install with `pip install engram-robomem` (imports as `robomem`). The base package needs only
-LanceDB, numpy, and Pillow. The real embedder (`fusion_embedding`) is not on PyPI yet, so install it
-from source:
+LanceDB, numpy, and Pillow. For the real embedder, install the `model` extra, which pulls
+[fusion-embedding](https://pypi.org/project/fusion-embedding); the weights download from Hugging Face
+at runtime:
 
 ```
-pip install "fusion_embedding @ git+https://github.com/Eximius-Labs/fusion-embedding"
+pip install "engram-robomem[model]"
 ```
 
 ## Design: dependency injection at the embedder seam

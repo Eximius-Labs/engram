@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "engram-robomem"
-version = "0.1.0"
+version = "0.1.1"
 description = "Engram: the open cross-modal memory layer for physical AI. Index a robot's video, audio, and motion; search and reason about it in plain language. Import as `robomem`."
 authors = [{ name = "Abdul Basit Tonmoy" }]
 readme = "README.md"
@@ -29,11 +29,10 @@ Homepage = "https://github.com/Eximius-Labs/engram"
 Repository = "https://github.com/Eximius-Labs/engram"
 
 [project.optional-dependencies]
-# The real embedder (fusion_embedding) is not on PyPI yet; install it from source:
-#   pip install "fusion_embedding @ git+https://github.com/Eximius-Labs/fusion-embedding"
-# The whole ingest -> index -> recall path runs GPU-free against an injected fake, so the
-# base install and tests never need it.
-model = []
+# The real embedder. The whole ingest -> index -> recall path runs GPU-free against an
+# injected fake, so the base install and tests never need it. The [hf] extra pulls the
+# loading deps; the weights download from Hugging Face at runtime.
+model = ["fusion-embedding[hf]"]
 # Video frame decoding for the real embed_video path.
 video = ["av>=12"]
 # Robot-log ingestion (later phase). Declared now so the extra names are stable.
