@@ -124,7 +124,8 @@ Required per event: `t` (or `t_start`), `modality`, and `path_or_data`. Optional
 `text | image | video | audio | thermal | motion | geometry | tactile`. For image, video, thermal, geometry,
 and audio, `path_or_data` is normally a path the embedder loads itself; audio and motion may also be
 passed as `{"data": [...], "sr": 16000}`; tactile takes a pressure window as a path or
-`{"data": [[...], ...]}` (frames of a 32x32 taxel grid, embedded by the Tactus pack).
+`{"data": [[...], ...]}` (frames of a 32x32 taxel grid, embedded by the
+[Tactus pack](https://huggingface.co/EximiusLabs/fusion-embedding-2-tactus)).
 
 ## CLI
 
