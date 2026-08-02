@@ -4,7 +4,7 @@
 
 **The open cross-modal memory layer for physical AI.**
 
-*Index a robot's video, audio, and motion into one embedding space, then search and reason
+*Index a robot's video, audio, motion, and touch into one embedding space, then search and reason
 about it in plain language, including temporal reasoning that retrieval alone cannot do.*
 
 [![PyPI](https://img.shields.io/pypi/v/engram-robomem.svg)](https://pypi.org/project/engram-robomem/)
@@ -100,6 +100,7 @@ Engram never builds an embedder. It takes one that implements the `embed_*` prot
 
 ```
 embed_text  embed_image  embed_video  embed_audio  embed_thermal  embed_motion  embed_geometry
+embed_tactile
 center      rank_cross_modal
 ```
 
@@ -120,9 +121,10 @@ A session is a JSONL file, a JSON array, or an in-memory list of events:
 
 Required per event: `t` (or `t_start`), `modality`, and `path_or_data`. Optional: `id`, `source`,
 `duration` (or `t_end`), `meta`, `thumb`. `modality` is one of
-`text | image | video | audio | thermal | motion | geometry`. For image, video, thermal, geometry,
+`text | image | video | audio | thermal | motion | geometry | tactile`. For image, video, thermal, geometry,
 and audio, `path_or_data` is normally a path the embedder loads itself; audio and motion may also be
-passed as `{"data": [...], "sr": 16000}`.
+passed as `{"data": [...], "sr": 16000}`; tactile takes a pressure window as a path or
+`{"data": [[...], ...]}` (frames of a 32x32 taxel grid, embedded by the Tactus pack).
 
 ## CLI
 
@@ -141,7 +143,7 @@ robomem show <event_id> --db <path> [--fake]
 | --- | --- | --- |
 | `event_id` | string | unique |
 | `t_start`, `t_end` | float64 | window time bounds (seconds) |
-| `modality` | string | text / image / video / audio / thermal / motion / geometry |
+| `modality` | string | text / image / video / audio / thermal / motion / geometry / tactile |
 | `source` | string | stream key (camera / mic / channel) |
 | `vector` | list<float32>[2048] | full-width, L2-normalized unified embedding |
 | `thumb`, `meta` | string | preview path, JSON metadata |

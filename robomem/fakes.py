@@ -110,6 +110,9 @@ class FakeEmbedder:
     def embed_motion(self, accel, dim=None):
         return self._emit(accel, "motion", dim)
 
+    def embed_tactile(self, pressure, dim=None):
+        return self._emit(pressure, "tactile", dim)
+
     def embed_geometry(self, image, dim=None):
         return self._emit(image, "geometry", dim)
 

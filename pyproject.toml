@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "engram-robomem"
-version = "0.1.2"
-description = "Engram: the open cross-modal memory layer for physical AI. Index a robot's video, audio, and motion; search and reason about it in plain language. Import as `robomem`."
+version = "0.2.0"
+description = "Engram: the open cross-modal memory layer for physical AI. Index a robot's video, audio, motion, and touch; search and reason about it in plain language. Import as `robomem`."
 authors = [{ name = "Abdul Basit Tonmoy" }]
 readme = "README.md"
 license = { text = "Apache-2.0" }

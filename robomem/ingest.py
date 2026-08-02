@@ -29,7 +29,7 @@ import numpy as np
 
 from .embedder import Embedder, l2_normalize, to_numpy
 
-_MODALITIES = ("text", "image", "video", "audio", "thermal", "motion", "geometry")
+_MODALITIES = ("text", "image", "video", "audio", "thermal", "motion", "geometry", "tactile")
 
 
 @dataclass
@@ -114,6 +114,11 @@ def _embed_one(embedder: Embedder, modality: str, payload) -> np.ndarray:
     elif modality == "motion":
         data = payload["data"] if isinstance(payload, dict) else payload
         v = embedder.embed_motion(np.asarray(data, dtype=np.float32))
+    elif modality == "tactile":
+        data = payload["data"] if isinstance(payload, dict) else payload
+        if not isinstance(data, str):
+            data = np.asarray(data, dtype=np.float32)
+        v = embedder.embed_tactile(data)
     else:  # pragma: no cover - guarded by _norm_event
         raise ValueError(modality)
     return to_numpy(v)
